@@ -1,0 +1,42 @@
+const express = require('express');
+const cors = require('cors');
+const fetch = require('node-fetch');
+
+const app = express();
+app.use(cors());
+
+const API_KEY = process.env.API_KEY || 'dda6e229-7cbf-4da6-8583-e727e9d20677';
+const API_BASE_URL = 'https://api-ca.ssactivewear.com/v2/inventory/';
+
+app.get('/api/inventory', async (req, res) => {
+  try {
+    const { product, style, styleid, partnumber, warehouses } = req.query;
+    let url = API_BASE_URL;
+
+    if (product) url += product;
+    if (style) url += `?style=${style}`;
+    if (styleid) url += `?styleid=${styleid}`;
+    if (partnumber) url += `?partnumber=${partnumber}`;
+    if (warehouses) url += `?Warehouses=${warehouses}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Erreur API:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des données d\'inventaire' });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Serveur proxy en écoute sur le port ${PORT}`));
